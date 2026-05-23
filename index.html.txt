@@ -1,0 +1,2380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HireSphere · Resume Screener</title>
+
+  <!-- Instrument Serif (editorial headings) + Inter (UI) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- PDF.js — browser-side text extraction, no backend required -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+
+  <style>
+    /* =========================================================
+       DESIGN TOKENS — HireSphere brand
+    ========================================================= */
+    :root {
+      --indigo:    #1E1B4B;   /* primary brand */
+      --amber:     #F59E0B;   /* accent / CTA highlights */
+      --bg:        #FAFAF9;   /* warm off-white page background */
+      --surface:   #FFFFFF;
+      --border:    #E7E5E4;
+      --text:      #292524;   /* warm dark body */
+      --muted:     #78716C;   /* secondary text */
+      --green:     #16A34A;
+      --warn:      #D97706;
+      --danger:    #DC2626;
+      --t:         200ms ease-out;
+      --shadow:    0 4px 12px rgba(0, 0, 0, 0.04);
+    }
+
+    /* =========================================================
+       BASE RESET
+    ========================================================= */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Tabular numerals globally for scores / counts */
+    .tabnum { font-variant-numeric: tabular-nums; }
+
+    /* =========================================================
+       TOP BAR — slim, sticky, brand-only
+    ========================================================= */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topbar-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 32px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Wordmark: ·hiresphere */
+    .wordmark {
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--indigo);
+      letter-spacing: -0.025em;
+      line-height: 1;
+    }
+    .wordmark .dot { color: var(--amber); }
+
+    .brand-tagline {
+      margin-top: 3px;
+      font-size: 11.5px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .version-pill {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      background: #F5F4F2;
+      border: 1px solid var(--border);
+      padding: 5px 14px;
+      border-radius: 999px;
+    }
+
+    /* =========================================================
+       PAGE INTRO — eyebrow, display heading, sub, stats
+    ========================================================= */
+    .page-intro {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 64px 32px 48px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 18px;
+    }
+
+    .display-heading {
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-style: italic;
+      font-size: 52px;
+      color: var(--indigo);
+      letter-spacing: -0.025em;
+      line-height: 1.08;
+      margin-bottom: 20px;
+    }
+
+    .intro-sub {
+      font-size: 16.5px;
+      color: var(--muted);
+      line-height: 1.65;
+      max-width: 500px;
+      margin-bottom: 28px;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .stat-pill {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      background: #F5F4F2;
+      border: 1px solid var(--border);
+      padding: 4px 12px;
+      border-radius: 999px;
+    }
+
+    .stat-sep { color: var(--border); font-size: 16px; line-height: 1; }
+
+    /* =========================================================
+       MAIN CONTENT WRAPPER
+    ========================================================= */
+    main {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 32px 80px;
+      flex: 1;
+    }
+
+    /* =========================================================
+       INPUT SECTION — two writing surfaces
+    ========================================================= */
+    .input-section {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .input-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .panel-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* Drop zone — minimal, amber on hover */
+    .dropzone {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1.5px dashed var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color var(--t), background var(--t);
+    }
+
+    .dropzone:hover {
+      border-color: var(--amber);
+      background: rgba(245, 158, 11, 0.03);
+    }
+
+    .dropzone input[type="file"] { display: none; }
+
+    .dz-icon { font-size: 14px; color: var(--muted); line-height: 1; }
+
+    .dz-text {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .dz-text strong { color: var(--text); font-weight: 500; }
+
+    /* Textarea as writing surface */
+    .input-panel textarea {
+      width: 100%;
+      height: 300px;
+      padding: 24px;
+      font-size: 13.5px;
+      font-family: 'Inter', monospace;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      resize: vertical;
+      background: #FFFDF9;            /* warm cream paper tint */
+      color: var(--text);
+      line-height: 1.72;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.025);
+      transition: border-color var(--t), box-shadow var(--t);
+    }
+
+    .input-panel textarea:focus {
+      outline: none;
+      border-color: var(--indigo);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.025),
+                  0 0 0 3px rgba(30, 27, 75, 0.07);
+    }
+
+    .input-panel textarea::placeholder { color: #A8A29E; font-size: 13px; }
+
+    /* =========================================================
+       ACTION BAR — button + keyboard hint
+    ========================================================= */
+    .action-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 48px;
+      padding-top: 4px;
+    }
+
+    .btn-score {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--indigo);
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+      transition: transform var(--t), box-shadow var(--t), opacity var(--t);
+    }
+
+    .btn-score:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(30, 27, 75, 0.22);
+    }
+
+    .btn-score:active:not(:disabled) { transform: translateY(0); }
+
+    .btn-score:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    .btn-arrow { font-size: 15px; line-height: 1; }
+
+    .kbd-hint { font-size: 13px; color: var(--muted); }
+
+    kbd {
+      display: inline-block;
+      font-family: inherit;
+      font-size: 11px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      color: var(--text);
+      box-shadow: 0 1px 0 var(--border);
+    }
+
+    /* Dot-pulse loader (3 pulsing circles) */
+    .dot-pulse {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .dot-pulse i {
+      display: block;
+      width: 5px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.65);
+      border-radius: 50%;
+      animation: dotPulse 1.1s ease-in-out infinite;
+    }
+
+    .dot-pulse i:nth-child(2) { animation-delay: 0.18s; }
+    .dot-pulse i:nth-child(3) { animation-delay: 0.36s; }
+
+    @keyframes dotPulse {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40%           { transform: scale(1);   opacity: 1;   }
+    }
+
+    /* =========================================================
+       RESULTS SECTION
+    ========================================================= */
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .results-title {
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-size: 28px;
+      font-style: normal;
+      color: var(--indigo);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      line-height: 1;
+    }
+
+    .count-pill {
+      display: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 500;
+      color: var(--muted);
+      background: #F5F4F2;
+      border: 1px solid var(--border);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Export — indigo outline, top-right of results */
+    .btn-export {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      color: var(--indigo);
+      border: 1px solid var(--indigo);
+      padding: 8px 16px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background var(--t), transform var(--t);
+    }
+
+    .btn-export:hover {
+      background: rgba(30, 27, 75, 0.04);
+      transform: translateY(-1px);
+    }
+
+    /* =========================================================
+       FILTER TABS — All · Strong match · Maybe · Skip
+    ========================================================= */
+    .filter-row {
+      display: none;        /* revealed after scoring */
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .filter-tabs { display: flex; }
+
+    .filter-tab {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 10px 18px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      margin-bottom: -1px;
+      white-space: nowrap;
+      transition: color var(--t), border-color var(--t);
+    }
+
+    .filter-tab:hover { color: var(--text); }
+
+    .filter-tab.active {
+      color: var(--indigo);
+      border-bottom-color: var(--amber);
+      font-weight: 600;
+    }
+
+    /* =========================================================
+       RESULTS PLACEHOLDER
+    ========================================================= */
+    .results-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 72px 24px;
+      gap: 10px;
+      border: 1.5px dashed var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .ph-icon { font-size: 28px; opacity: 0.3; }
+
+    .results-placeholder strong { color: var(--text); font-weight: 600; }
+
+    /* Alert */
+    .alert {
+      padding: 13px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 16px;
+      border-left: 3px solid var(--amber);
+      background: #FFFBEB;
+      color: #78350F;
+    }
+
+    /* =========================================================
+       RESUME CARD
+    ========================================================= */
+    .resume-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: transform var(--t), border-color var(--t), box-shadow var(--t);
+      animation: fadeInUp 0.28s ease-out both;
+    }
+
+    .resume-card:hover {
+      transform: translateY(-2px);
+      border-color: #D1CFC9;
+      box-shadow: var(--shadow);
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0);   }
+    }
+
+    /* Card header row — full row is clickable */
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 24px;
+      cursor: pointer;
+      user-select: none;
+      transition: background var(--t);
+    }
+
+    .card-header:hover { background: #FAFAF9; }
+
+    .card-checkbox {
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+      flex-shrink: 0;
+      accent-color: var(--indigo);
+    }
+
+    /* Large serif rank numeral */
+    .card-rank {
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-size: 28px;
+      color: #D6D3D1;
+      width: 36px;
+      flex-shrink: 0;
+      text-align: center;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .card-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .candidate-name {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* "6 yrs · Zerodha · Bangalore" */
+    .candidate-meta {
+      font-size: 13.5px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Score + tier on the right */
+    .card-score-block {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .score-number {
+      font-size: 36px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      margin-bottom: 6px;
+    }
+
+    .score-strong { color: var(--green); }
+    .score-maybe  { color: var(--warn);  }
+    .score-skip   { color: var(--danger);}
+
+    .tier-pill {
+      display: inline-block;
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+
+    .tier-strong { background: #DCFCE7; color: #15803D; }
+    .tier-maybe  { background: #FEF3C7; color: #92400E; }
+    .tier-skip   { background: #FEE2E2; color: #991B1B; }
+
+    /* Chevron toggle button */
+    .card-toggle {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      color: var(--muted);
+      font-size: 11px;
+      transition: background var(--t), border-color var(--t);
+    }
+
+    .card-toggle:hover { background: var(--bg); border-color: #C6C3C0; }
+
+    /* =========================================================
+       CARD DETAIL — smooth expand via grid-template-rows
+    ========================================================= */
+    .card-expand-outer {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows var(--t);
+    }
+
+    .card-expand-outer.open { grid-template-rows: 1fr; }
+
+    .card-expand-inner { overflow: hidden; }
+
+    .card-detail-content {
+      border-top: 1px solid var(--border);
+      padding: 24px;
+    }
+
+    /* 2-column detail grid */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .detail-col h5 {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    /* Skill items — green dot for matched, amber dash for missing */
+    .skill-list { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .skill-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12.5px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 6px;
+    }
+
+    .skill-matched {
+      background: rgba(22, 163, 74, 0.08);
+      color: #15803D;
+    }
+
+    .skill-matched::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+    }
+
+    .skill-missing {
+      background: rgba(245, 158, 11, 0.08);
+      color: #92400E;
+    }
+
+    .skill-missing::before {
+      content: '—';
+      font-size: 10px;
+      color: var(--warn);
+    }
+
+    /* Candidate info */
+    .meta-list { display: flex; flex-direction: column; gap: 6px; }
+
+    .meta-item {
+      font-size: 13.5px;
+      color: var(--muted);
+      display: flex;
+      gap: 8px;
+    }
+
+    .meta-item strong {
+      font-weight: 500;
+      color: var(--text);
+      min-width: 80px;
+      flex-shrink: 0;
+    }
+
+    /* Score breakdown with mini bar charts */
+    .breakdown-rows { display: flex; flex-direction: column; gap: 10px; }
+
+    .breakdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .breakdown-label { min-width: 76px; }
+
+    .breakdown-bar-wrap {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 0 12px;
+      overflow: hidden;
+    }
+
+    .breakdown-bar {
+      height: 100%;
+      border-radius: 2px;
+      background: var(--indigo);
+    }
+
+    .breakdown-val {
+      font-weight: 600;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+      min-width: 40px;
+      text-align: right;
+    }
+
+    .breakdown-total {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Reasoning paragraph */
+    .reasoning-block { border-top: 1px solid var(--border); padding-top: 18px; }
+
+    .reasoning-block h5 {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .reasoning-text { font-size: 14px; color: var(--muted); line-height: 1.65; }
+
+    /* =========================================================
+       FOOTER
+    ========================================================= */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-left { font-size: 12.5px; color: var(--muted); }
+
+    .footer-right {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+    }
+
+    /* =========================================================
+       PDF UPLOAD — dropzone states, file chips, status messages
+    ========================================================= */
+
+    /* Dropzone active drag state */
+    .dropzone.dz-over {
+      border-color: var(--amber);
+      background: rgba(245, 158, 11, 0.05);
+    }
+
+    /* File chip row */
+    .pdf-file-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .pdf-file-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #F5F4F2;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 8px 4px 10px;
+      font-size: 12.5px;
+      max-width: 260px;
+    }
+
+    .chip-icon { font-size: 12px; flex-shrink: 0; }
+
+    .chip-name {
+      color: var(--text);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+
+    .chip-remove {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 1px 3px;
+      font-size: 13px;
+      line-height: 1;
+      border-radius: 3px;
+      flex-shrink: 0;
+      transition: color var(--t), background var(--t);
+    }
+
+    .chip-remove:hover { color: var(--danger); background: #FEF2F2; }
+
+    /* Status line below dropzone */
+    .pdf-status {
+      font-size: 12.5px;
+      padding: 4px 0 0;
+      display: none;
+    }
+
+    .pdf-status--loading { color: var(--muted); font-style: italic; }
+    .pdf-status--success { color: var(--green);  }
+    .pdf-status--error   { color: var(--danger); }
+
+    /* Per-file error list */
+    .pdf-err-list { margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
+
+    .pdf-err {
+      font-size: 12.5px;
+      color: var(--danger);
+      padding: 6px 10px;
+      background: #FEF2F2;
+      border-radius: 6px;
+      border-left: 3px solid var(--danger);
+      line-height: 1.4;
+    }
+
+    /* =========================================================
+       MAIL CONFIGURATION SECTION
+    ========================================================= */
+    .mail-section {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+
+    .mail-section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 20px;
+      cursor: pointer;
+      user-select: none;
+      background: var(--surface);
+      border-bottom: 1px solid transparent;
+      transition: border-color var(--t), background var(--t);
+    }
+
+    .mail-section-header:hover { background: var(--bg); }
+    .mail-section.open .mail-section-header { border-bottom-color: var(--border); }
+
+    .mail-section-icon {
+      font-size: 16px;
+      color: var(--indigo);
+    }
+
+    .mail-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      flex: 1;
+    }
+
+    .mail-configured-badge {
+      display: none;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--green);
+      background: #DCFCE7;
+      border-radius: 20px;
+      padding: 2px 10px;
+    }
+
+    .mail-configured-badge.visible { display: inline-flex; }
+
+    .mail-chevron {
+      font-size: 11px;
+      color: var(--muted);
+      transition: transform var(--t);
+    }
+
+    .mail-section.open .mail-chevron { transform: rotate(180deg); }
+
+    /* Smooth expand — same grid trick as card detail */
+    .mail-body-outer {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 220ms ease-out;
+    }
+
+    .mail-section.open .mail-body-outer { grid-template-rows: 1fr; }
+
+    .mail-body-inner { overflow: hidden; }
+
+    .mail-body-content {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 20px;
+    }
+
+    .mail-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .mail-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mail-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .mail-input {
+      height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      transition: border-color var(--t), box-shadow var(--t);
+    }
+
+    .mail-input:focus {
+      border-color: var(--indigo);
+      box-shadow: 0 0 0 3px rgba(30,27,75,0.08);
+    }
+
+    .mail-textarea {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--bg);
+      resize: vertical;
+      min-height: 160px;
+      line-height: 1.55;
+      outline: none;
+      transition: border-color var(--t), box-shadow var(--t);
+    }
+
+    .mail-textarea:focus {
+      border-color: var(--indigo);
+      box-shadow: 0 0 0 3px rgba(30,27,75,0.08);
+    }
+
+    .mail-vars-guide {
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .mail-vars-guide code {
+      font-family: 'Courier New', monospace;
+      font-size: 11.5px;
+      background: #F5F4F2;
+      border: 1px solid #E7E5E4;
+      border-radius: 4px;
+      padding: 1px 5px;
+      color: var(--indigo);
+    }
+
+    .mail-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-load-default {
+      padding: 7px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: background var(--t), border-color var(--t);
+    }
+
+    .btn-load-default:hover { background: var(--bg); border-color: #C6C3C0; }
+
+    /* Send mail button on each candidate card */
+    .btn-send-mail {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-size: 12.5px;
+      font-weight: 500;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--indigo);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background var(--t), border-color var(--t), color var(--t);
+    }
+
+    .btn-send-mail:hover {
+      background: var(--indigo);
+      color: #fff;
+      border-color: var(--indigo);
+    }
+
+    /* =========================================================
+       RESPONSIVE — tablets and smaller
+    ========================================================= */
+    @media (max-width: 900px) {
+      .topbar-inner       { padding: 0 20px; }
+      .page-intro         { padding: 40px 20px 36px; }
+      .display-heading    { font-size: 36px; }
+      .intro-sub          { font-size: 15px; max-width: 100%; }
+      main                { padding: 0 20px 60px; }
+      .input-section      { flex-direction: column; }
+      .input-panel textarea { height: 200px; }
+      .action-bar         { flex-wrap: wrap; }
+      .detail-grid        { grid-template-columns: 1fr; gap: 16px; }
+      .card-rank          { display: none; }
+      footer              { flex-direction: column; gap: 6px; text-align: center; }
+    }
+
+    @media (max-width: 600px) {
+      .display-heading    { font-size: 28px; }
+      .card-header        { padding: 16px; gap: 10px; }
+      .card-detail-content{ padding: 16px; }
+      .score-number       { font-size: 28px; }
+      .candidate-name     { white-space: normal; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- =========================================================
+       TOP BAR
+  ========================================================= -->
+  <header class="topbar" role="banner">
+    <div class="topbar-inner">
+      <div>
+        <div class="wordmark"><span class="dot">·</span>hiresphere</div>
+        <div class="brand-tagline">Hiring intelligence for modern teams</div>
+      </div>
+      <div class="version-pill">Internal Tool &nbsp;·&nbsp; v1.0</div>
+    </div>
+  </header>
+
+  <!-- =========================================================
+       PAGE INTRO
+  ========================================================= -->
+  <div class="page-intro">
+    <span class="eyebrow">Resume Intelligence</span>
+    <h1 class="display-heading">Screen smarter. Hire faster.</h1>
+    <p class="intro-sub">
+      Upload job descriptions and resumes. Get ranked candidates
+      with reasoning in seconds.
+    </p>
+    <div class="stat-row">
+      <span class="stat-pill">Avg. screening time: 47s</span>
+      <span class="stat-sep" aria-hidden="true">·</span>
+      <span class="stat-pill">Accuracy: 94%</span>
+      <span class="stat-sep" aria-hidden="true">·</span>
+      <span class="stat-pill">PDFs supported</span>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MAIN
+  ========================================================= -->
+  <main>
+
+    <!-- INPUT SECTION -->
+    <section class="input-section" aria-label="Input panels">
+
+      <!-- Left: Job Description -->
+      <div class="input-panel">
+        <span class="panel-label">Job Description</span>
+
+        <label class="dropzone" id="jd-dropzone" for="jd-pdf">
+          <input type="file" id="jd-pdf" accept=".pdf"
+                 onchange="if (this.files[0]) processJDFile(this.files[0]); this.value = '';" />
+          <span class="dz-icon">&#9729;</span>
+          <span class="dz-text">
+            <strong>Drag PDF here or click to upload</strong>
+            &nbsp;&mdash;&nbsp; or paste text below
+          </span>
+        </label>
+
+        <div class="pdf-status" id="jd-pdf-status"></div>
+
+        <textarea
+          id="jd-input"
+          name="jd-input"
+          placeholder="Example:
+
+Role: Senior Software Engineer
+Location: Bangalore / Hyderabad
+Experience: 4-8 years
+Package: 18-28 LPA
+
+Required Skills:
+- Python, Django, REST APIs
+- PostgreSQL, Redis
+- AWS or GCP
+- Git, CI/CD
+
+Preferred:
+- Experience at product startups
+- Knowledge of microservices"
+        ></textarea>
+      </div>
+
+      <!-- Right: Resumes -->
+      <div class="input-panel">
+        <span class="panel-label">Candidate Resumes</span>
+
+        <label class="dropzone" id="resume-dropzone" for="resume-pdfs">
+          <input type="file" id="resume-pdfs" accept=".pdf" multiple
+                 onchange="addResumeFiles(this.files); this.value = '';" />
+          <span class="dz-icon">&#9729;</span>
+          <span class="dz-text">
+            <strong>Drag PDFs here or click to select</strong>
+            &nbsp;&mdash;&nbsp; multiple files supported
+          </span>
+        </label>
+
+        <!-- Uploaded file chips -->
+        <div class="pdf-file-list" id="resume-file-list"></div>
+
+        <!-- "Extracting…" / "✓ Loaded 5 resumes" / error summary -->
+        <div class="pdf-status" id="resume-pdf-status"></div>
+
+        <!-- Per-file error details (scanned PDFs etc.) -->
+        <div class="pdf-err-list" id="resume-pdf-errors"></div>
+
+        <textarea
+          id="resumes-input"
+          name="resumes-input"
+          placeholder="Separate each resume with ---
+
+Example:
+
+Rohit Kumar
+rohit.kumar@gmail.com | +91-9876543210 | Bangalore
+Current: Software Engineer at Razorpay (3 years)
+Education: B.Tech, IIT Bombay, 2020
+Skills: Python, Django, PostgreSQL, Redis, AWS
+
+---
+
+Priya Sharma
+priya.sharma@outlook.com | +91-9123456780 | Pune
+Current: Backend Developer at Infosys (5 years)
+Education: B.E., VIT Vellore, 2018
+Skills: Java, Spring Boot, MySQL, Docker"
+        ></textarea>
+      </div>
+
+    </section>
+
+    <!-- ACTION BAR -->
+    <div class="action-bar">
+      <button class="btn-score" type="button" id="score-btn">
+        Score candidates <span class="btn-arrow">&#8594;</span>
+      </button>
+      <span class="kbd-hint">
+        or press <kbd>&#8984;</kbd> + <kbd>Enter</kbd> to score
+      </span>
+    </div>
+
+    <!-- MAIL CONFIGURATION SECTION -->
+    <div class="mail-section" id="mail-section">
+      <div class="mail-section-header" onclick="toggleMailSection()">
+        <span class="mail-section-icon">&#9993;</span>
+        <span class="mail-section-title">Email Configuration</span>
+        <span class="mail-configured-badge" id="mail-badge">&#10003; Configured</span>
+        <span class="mail-chevron">&#9660;</span>
+      </div>
+      <div class="mail-body-outer">
+        <div class="mail-body-inner">
+          <div class="mail-body-content">
+
+            <div class="mail-row">
+              <div class="mail-field">
+                <label class="mail-label" for="mail-from">Your Email Address</label>
+                <input class="mail-input" id="mail-from" type="email"
+                       placeholder="you@company.com"
+                       oninput="checkMailConfigured()">
+              </div>
+              <div class="mail-field">
+                <label class="mail-label" for="mail-subject">Email Subject</label>
+                <input class="mail-input" id="mail-subject" type="text"
+                       placeholder="Exciting Opportunity — {job_role} at HireSphere"
+                       oninput="checkMailConfigured()">
+              </div>
+            </div>
+
+            <div class="mail-field">
+              <label class="mail-label" for="mail-template">Email Body Template</label>
+              <textarea class="mail-textarea" id="mail-template"
+                        placeholder="Write your email template here…"
+                        oninput="checkMailConfigured()"></textarea>
+            </div>
+
+            <div class="mail-vars-guide">
+              <strong style="color:var(--text)">Available variables:</strong>&nbsp;
+              <code>{name}</code> &nbsp;
+              <code>{email}</code> &nbsp;
+              <code>{job_role}</code> &nbsp;
+              <code>{score}</code> &nbsp;
+              <code>{tier}</code> &nbsp;
+              <code>{experience}</code> &nbsp;
+              <code>{company}</code> &nbsp;
+              <code>{location}</code> &nbsp;
+              <code>{education}</code> &nbsp;
+              <code>{matched_skills}</code> &nbsp;
+              <code>{missing_skills}</code>
+            </div>
+
+            <div class="mail-actions">
+              <button class="btn-load-default" type="button" onclick="loadDefaultTemplate()">
+                Load sample template
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS SECTION -->
+    <section aria-label="Screening results">
+
+      <div class="results-header">
+        <h2 class="results-title">
+          Ranked candidates
+          <span class="count-pill tabnum" id="results-count"></span>
+        </h2>
+        <button class="btn-export" type="button" id="export-btn">
+          &#8595; Export CSV
+        </button>
+      </div>
+
+      <!-- Filter tabs — hidden until scoring runs -->
+      <div class="filter-row" id="filter-row">
+        <div class="filter-tabs" role="tablist">
+          <button class="filter-tab active" data-filter="all"    role="tab">All</button>
+          <button class="filter-tab"        data-filter="strong" role="tab">Strong match</button>
+          <button class="filter-tab"        data-filter="maybe"  role="tab">Maybe</button>
+          <button class="filter-tab"        data-filter="skip"   role="tab">Skip</button>
+        </div>
+      </div>
+
+      <!-- Placeholder -->
+      <div class="results-placeholder" id="results-placeholder">
+        <span class="ph-icon" aria-hidden="true">&#9783;</span>
+        <strong>No results yet</strong>
+        <span>Paste a job description and candidate resumes above,<br>then click <strong>Score candidates</strong>.</span>
+      </div>
+
+      <!-- Scored cards injected here -->
+      <div id="results-list"></div>
+
+    </section>
+
+  </main>
+
+  <!-- =========================================================
+       FOOTER
+  ========================================================= -->
+  <footer>
+    <span class="footer-left">Built for HireSphere &nbsp;·&nbsp; Powered by Claude Code</span>
+    <span class="footer-right">
+      <span class="status-dot" aria-hidden="true"></span>
+      All systems operational
+    </span>
+  </footer>
+
+
+  <!-- =========================================================
+       JAVASCRIPT — complete scoring engine
+       Logic sections 1–8 and 11 are preserved verbatim.
+  ========================================================= -->
+  <script>
+
+    /* =============================================================
+       SECTION 1: SCORING WEIGHTS
+       Change the three numbers below to adjust how scores are
+       calculated. They must still sum to 100.
+         SKILLS   (60): proportion of JD skills found in resume
+         EXP      (25): match against the JD experience range
+         LOCATION (15): city match between JD and resume
+    ============================================================= */
+    const WEIGHTS = {
+      skills:     60,
+      experience: 25,
+      location:   15,
+    };
+
+
+    /* =============================================================
+       SECTION 2: SKILL KEYWORD DICTIONARY
+       Add or remove skills here as the market evolves.
+       Sorted longest-first so multi-word skills match before their
+       component words (e.g. "Spring Boot" before "Spring").
+    ============================================================= */
+    const SKILL_KEYWORDS = [
+      // Multi-word first (order matters for extraction)
+      'Machine Learning', 'Deep Learning', 'Spring Boot', 'GitHub Actions',
+      'GitLab CI', 'System Design', 'Data Structures', 'REST APIs',
+      'REST API', 'CI/CD', 'Node.js', 'Next.js', 'Vue.js', 'ASP.NET',
+      // Languages
+      'JavaScript', 'TypeScript', 'Python', 'Golang', 'Kotlin',
+      'Java', 'Scala', 'Rust', 'Swift', 'Ruby', 'PHP', 'C#', 'C++', 'Go', 'R',
+      // Frontend
+      'React', 'Angular', 'Vue', 'Svelte', 'Nuxt',
+      'HTML', 'CSS', 'SASS', 'SCSS', 'Tailwind', 'Bootstrap',
+      // Backend frameworks
+      'Express', 'Django', 'Flask', 'FastAPI', 'Spring', 'Laravel',
+      'Rails', 'NLP', 'LLM',
+      // Databases
+      'PostgreSQL', 'MongoDB', 'DynamoDB', 'Cassandra', 'Firebase',
+      'Supabase', 'Elasticsearch', 'MySQL', 'SQLite', 'Oracle',
+      'Redis', 'SQL',
+      // Cloud & DevOps
+      'Kubernetes', 'Terraform', 'Ansible', 'Docker',
+      'AWS', 'GCP', 'Azure',
+      'Jenkins', 'CircleCI',
+      // Data & ML
+      'TensorFlow', 'PyTorch', 'Scikit-learn', 'Pandas', 'NumPy', 'Spark',
+      // Messaging & misc
+      'Kafka', 'RabbitMQ', 'Celery', 'GraphQL', 'gRPC', 'WebSockets',
+      'Git', 'Linux', 'Bash', 'REST',
+      // Process
+      'Microservices', 'Algorithms', 'Agile', 'Scrum', 'Jira', 'Figma',
+    ];
+
+    // Sorted longest-first so multi-word skills are checked before single words
+    const SORTED_SKILLS = [...SKILL_KEYWORDS].sort((a, b) => b.length - a.length);
+
+
+    /* =============================================================
+       SECTION 3: INDIAN CITY DATA
+       Extend this list to support more tier-2 cities.
+    ============================================================= */
+    const INDIAN_CITIES = [
+      'Bangalore', 'Bengaluru', 'Mumbai', 'Delhi', 'Hyderabad',
+      'Chennai', 'Pune', 'Kolkata', 'Ahmedabad', 'Indore',
+      'Noida', 'Gurgaon', 'Gurugram', 'Chandigarh', 'Jaipur',
+      'Kochi', 'Bhubaneswar', 'Coimbatore', 'Nagpur', 'Surat',
+    ];
+
+    // Cities that are treated as identical for location scoring
+    const CITY_ALIASES = [
+      ['bangalore', 'bengaluru'],
+      ['gurgaon',  'gurugram'],
+    ];
+
+
+    /* =============================================================
+       SECTION 4: PURE HELPER FUNCTIONS
+    ============================================================= */
+
+    /** Escape a string for safe insertion into HTML. */
+    function escHtml(str) {
+      return (str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    /** Return tier metadata for a 0-100 score. */
+    function getTier(score) {
+      if (score >= 80) return {
+        label: 'Strong match', filterKey: 'strong',
+        pillClass: 'tier-strong', scoreClass: 'score-strong',
+      };
+      if (score >= 50) return {
+        label: 'Maybe', filterKey: 'maybe',
+        pillClass: 'tier-maybe', scoreClass: 'score-maybe',
+      };
+      return {
+        label: 'Skip', filterKey: 'skip',
+        pillClass: 'tier-skip', scoreClass: 'score-skip',
+      };
+    }
+
+    /** Compare two city strings, treating known aliases as equal. */
+    function citiesMatch(a, b) {
+      const na = (a || '').toLowerCase().trim();
+      const nb = (b || '').toLowerCase().trim();
+      if (!na || !nb) return false;
+      if (na === nb)  return true;
+      return CITY_ALIASES.some(group => group.includes(na) && group.includes(nb));
+    }
+
+    /**
+     * Compare two skill strings.
+     * Normalises punctuation/spacing and checks a short-form alias table
+     * so "Node.js" matches "Node", "PostgreSQL" matches "Postgres", etc.
+     */
+    function skillsMatch(a, b) {
+      const norm = s => s.toLowerCase().replace(/[\s.\-_]/g, '');
+      const na = norm(a), nb = norm(b);
+      if (na === nb) return true;
+      const ALIASES = {
+        nodejs:         ['node'],
+        reactjs:        ['react'],
+        vuejs:          ['vue'],
+        golang:         ['go'],
+        postgresql:     ['postgres', 'psql'],
+        mongodb:        ['mongo'],
+        kubernetes:     ['k8s'],
+        javascript:     ['js'],
+        typescript:     ['ts'],
+        machinelearning:['ml'],
+        deeplearning:   ['dl'],
+        restapis:       ['rest', 'restapi'],
+        restapi:        ['rest'],
+        cicd:           ['ci/cd'],
+      };
+      for (const [canonical, shorts] of Object.entries(ALIASES)) {
+        if ((na === canonical && shorts.includes(nb)) ||
+            (nb === canonical && shorts.includes(na))) return true;
+      }
+      return false;
+    }
+
+
+    /* =============================================================
+       SECTION 5: SKILL EXTRACTION
+       Scans any block of text and returns the subset of
+       SKILL_KEYWORDS that appear as standalone tokens.
+    ============================================================= */
+    function extractSkills(text) {
+      const found = new Set();
+      for (const skill of SORTED_SKILLS) {
+        // Escape regex special chars in the skill name
+        const escaped = skill.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        // Word-boundary equivalent that works for skills containing dots and slashes
+        const re = new RegExp(`(?<![A-Za-z0-9])${escaped}(?![A-Za-z0-9])`, 'i');
+        if (re.test(text)) {
+          found.add(skill); // store with canonical casing from dictionary
+        }
+      }
+      return [...found];
+    }
+
+
+    /* =============================================================
+       SECTION 6: JD PARSER
+       Input : raw JD text string
+       Output: { skills[], expMin, expMax, location }
+    ============================================================= */
+    function parseJD(text) {
+      // Skills — scan the full JD text
+      const skills = extractSkills(text);
+
+      // Experience range: "4-8 years", "4–8 yrs", "4 to 8 years"
+      let expMin = 0, expMax = 99;
+      const rangeMatch = text.match(/(\d+)\s*(?:[-–]|to)\s*(\d+)\s*(?:years?|yrs?)/i);
+      if (rangeMatch) {
+        expMin = parseInt(rangeMatch[1], 10);
+        expMax = parseInt(rangeMatch[2], 10);
+      } else {
+        // Open-ended: "5+ years"
+        const plusMatch = text.match(/(\d+)\+\s*(?:years?|yrs?)/i);
+        if (plusMatch) {
+          expMin = parseInt(plusMatch[1], 10);
+          expMax = 99;
+        }
+      }
+
+      // Location — first Indian city found in the text
+      let location = '';
+      const lower = text.toLowerCase();
+      for (const city of INDIAN_CITIES) {
+        if (lower.includes(city.toLowerCase())) {
+          location = city;
+          break;
+        }
+      }
+
+      return { skills, expMin, expMax, location };
+    }
+
+
+    /* =============================================================
+       SECTION 7: RESUME PARSER
+       Input : a single resume text block (one candidate)
+       Output: { name, email, phone, experience, skills,
+                 company, education, location }
+    ============================================================= */
+    function parseResume(text) {
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+      /* NAME — prefer explicit "Name: X" label, else first line that
+         looks like 2-3 properly capitalised words (no digits).       */
+      let name = 'Unknown Candidate';
+      const nameLabelMatch = text.match(/^Name\s*[:\-]\s*(.+)/im);
+      if (nameLabelMatch) {
+        name = nameLabelMatch[1].trim();
+      } else {
+        for (const line of lines) {
+          if (/^[A-Z][a-zA-Z]+(?: [A-Z][a-zA-Z]+){1,2}$/.test(line) &&
+              !/\d/.test(line)) {
+            name = line;
+            break;
+          }
+        }
+      }
+
+      /* EMAIL */
+      const emailMatch = text.match(/[\w._%+\-]+@[\w.\-]+\.[a-zA-Z]{2,}/);
+      const email = emailMatch ? emailMatch[0] : '';
+
+      /* PHONE — Indian 10-digit, optional +91 prefix */
+      const phoneMatch = text.match(/(?:\+91[\s\-]?)?[6-9]\d{9}/);
+      const phone = phoneMatch ? phoneMatch[0] : '';
+
+      /* EXPERIENCE — try patterns from most specific to most general */
+      let experience = null;
+      const expPatterns = [
+        /total\s*(?:work)?\s*experience\s*[:\-]?\s*(\d+)\+?\s*(?:years?|yrs?)/i,
+        /(\d+)\+?\s*(?:years?|yrs?)\s*of\s*(?:total\s*)?(?:work\s*)?experience/i,
+        /experience\s*[:\-]\s*(\d+)\+?\s*(?:years?|yrs?)/i,
+        /(\d+)\+?\s*(?:years?|yrs?)\s*exp(?:erience)?/i,
+        /(\d+)\+?\s*(?:years?|yrs?)/i,   // broadest fallback
+      ];
+      for (const re of expPatterns) {
+        const m = text.match(re);
+        if (m) { experience = parseInt(m[1], 10); break; }
+      }
+
+      /* SKILLS */
+      const skills = extractSkills(text);
+
+      /* CURRENT COMPANY */
+      let company = '';
+      const companyPatterns = [
+        /current(?:ly)?\s*(?:company|employer|working\s+at|at)?\s*[:\-]\s*([A-Za-z0-9][A-Za-z0-9 ,&.]*)/i,
+        /(?:working|employed)\s+at\s+([A-Z][A-Za-z0-9 &.]+)/i,
+        /at\s+([A-Z][A-Za-z0-9&. ]+?)\s*(?:\(|,|\||$)/m,
+      ];
+      for (const re of companyPatterns) {
+        const m = text.match(re);
+        if (m) { company = m[1].trim().replace(/\s+/g, ' '); break; }
+      }
+
+      /* EDUCATION — prefer explicit label, fall back to institution name */
+      let education = '';
+      const eduLabelMatch = text.match(/education\s*[:\-]\s*(.+)/i);
+      if (eduLabelMatch) {
+        education = eduLabelMatch[1].trim();
+      } else {
+        const institutions = [
+          'IIT', 'NIT', 'BITS', 'VIT', 'IIIT',
+          'Anna University', 'Jadavpur', 'NSIT', 'DTU', 'COEP',
+        ];
+        for (const inst of institutions) {
+          const re = new RegExp(`[^\n]*${inst}[^\n]*`, 'i');
+          const m  = text.match(re);
+          if (m) { education = m[0].trim(); break; }
+        }
+      }
+
+      /* LOCATION — first Indian city found */
+      let location = '';
+      const lower = text.toLowerCase();
+      for (const city of INDIAN_CITIES) {
+        if (lower.includes(city.toLowerCase())) {
+          location = city;
+          break;
+        }
+      }
+
+      return { name, email, phone, experience, skills, company, education, location };
+    }
+
+
+    /* =============================================================
+       SECTION 8: SCORING ALGORITHM
+       Applies WEIGHTS against parsed JD data.
+       Returns the resume object enriched with score fields.
+
+       Scoring formula recap:
+         skillScore    = WEIGHTS.skills   × (matched ÷ required)
+         expScore      = WEIGHTS.experience  (full if in range;
+                         deduct 5 per year outside range, min 0)
+         locationScore = WEIGHTS.location   (0 or full — binary)
+         total         = skillScore + expScore + locationScore
+    ============================================================= */
+    function scoreResume(resume, jd) {
+
+      // ---- Skills (0 – WEIGHTS.skills) ----
+      let matchedSkills = [];
+      let missingSkills = [];
+      let skillScore    = 0;
+
+      if (jd.skills.length > 0) {
+        matchedSkills = jd.skills.filter(jdSkill =>
+          resume.skills.some(rSkill => skillsMatch(jdSkill, rSkill))
+        );
+        missingSkills = jd.skills.filter(jdSkill =>
+          !resume.skills.some(rSkill => skillsMatch(jdSkill, rSkill))
+        );
+        skillScore = Math.round(WEIGHTS.skills * (matchedSkills.length / jd.skills.length));
+      } else {
+        // JD has no parseable skills — give everyone full skill points
+        skillScore    = WEIGHTS.skills;
+        matchedSkills = [];
+        missingSkills = [];
+      }
+
+      // ---- Experience (0 – WEIGHTS.experience) ----
+      let expScore = 0;
+      if (resume.experience !== null) {
+        const { expMin, expMax } = jd;
+        if (resume.experience >= expMin && resume.experience <= expMax) {
+          expScore = WEIGHTS.experience;
+        } else {
+          const gap = resume.experience < expMin
+            ? expMin - resume.experience
+            : resume.experience - expMax;
+          expScore = Math.max(0, WEIGHTS.experience - gap * 5);
+        }
+      } else if (jd.expMin === 0 && jd.expMax === 99) {
+        // JD didn't specify a range either — give everyone full points
+        expScore = WEIGHTS.experience;
+      }
+
+      // ---- Location (0 or WEIGHTS.location) ----
+      const locationScore = citiesMatch(jd.location, resume.location)
+        ? WEIGHTS.location
+        : 0;
+
+      return {
+        ...resume,
+        score:         skillScore + expScore + locationScore,
+        skillScore,
+        expScore,
+        locationScore,
+        matchedSkills,
+        missingSkills,
+      };
+    }
+
+
+    /* =============================================================
+       SECTION 9: REASONING GENERATOR
+       Builds a plain-English summary sentence from the score data.
+       Called inside renderCard — reads window._lastParsedJD.
+    ============================================================= */
+    function generateReasoning(candidate, jd) {
+      const parts = [];
+      const matched = (candidate.matchedSkills || []).length;
+      const total   = (jd.skills || []).length;
+
+      if (total > 0) {
+        const preview = (candidate.matchedSkills || []).slice(0, 3).join(', ');
+        const more    = matched > 3 ? ` and ${matched - 3} more` : '';
+        parts.push(
+          matched === total
+            ? `Covers all ${total} required skills (${preview}${more}).`
+            : `Matches ${matched} of ${total} required skills (${preview}${more}).`
+        );
+      }
+
+      if (candidate.experience !== null && jd.expMin > 0) {
+        const range = jd.expMax === 99
+          ? `${jd.expMin}+`
+          : `${jd.expMin}–${jd.expMax}`;
+        if (candidate.expScore === WEIGHTS.experience) {
+          parts.push(`Experience of ${candidate.experience} yrs is within the required ${range} year range.`);
+        } else {
+          const dir = candidate.experience < jd.expMin ? 'below' : 'above';
+          parts.push(`Experience (${candidate.experience} yrs) is ${dir} the required ${range} year range.`);
+        }
+      }
+
+      if (candidate.locationScore > 0) {
+        parts.push(`Location (${candidate.location}) matches the JD.`);
+      } else if (jd.location && candidate.location) {
+        parts.push(`Located in ${candidate.location}; JD requires ${jd.location}.`);
+      }
+
+      return parts.join(' ') || 'Insufficient data for detailed reasoning.';
+    }
+
+
+    /* =============================================================
+       SECTION 10: CARD RENDERER
+       Builds the complete HTML string for one scored candidate card.
+    ============================================================= */
+    function renderCard(candidate, rank) {
+      const tier     = getTier(candidate.score);
+      const expandId = `expand-${rank}`;
+      const jd       = window._lastParsedJD || { skills: [], expMin: 0, expMax: 99, location: '' };
+
+      // Single-line meta: "6 yrs · Razorpay · Bangalore"
+      const metaParts = [];
+      if (candidate.experience !== null) metaParts.push(`${candidate.experience} yr${candidate.experience !== 1 ? 's' : ''}`);
+      if (candidate.company)  metaParts.push(escHtml(candidate.company));
+      if (candidate.location) metaParts.push(escHtml(candidate.location));
+      const metaLine = metaParts.join(' · ') || '—';
+
+      // Skill chips
+      const matchedChips = (candidate.matchedSkills || [])
+        .map(s => `<span class="skill-item skill-matched">${escHtml(s)}</span>`)
+        .join('');
+
+      const missingChips = (candidate.missingSkills || [])
+        .map(s => `<span class="skill-item skill-missing">${escHtml(s)}</span>`)
+        .join('');
+
+      // Breakdown bar widths (% of each component's max)
+      const skillPct = WEIGHTS.skills     > 0 ? Math.round(candidate.skillScore    / WEIGHTS.skills     * 100) : 0;
+      const expPct   = WEIGHTS.experience > 0 ? Math.round(candidate.expScore      / WEIGHTS.experience * 100) : 0;
+      const locPct   = WEIGHTS.location   > 0 ? Math.round(candidate.locationScore / WEIGHTS.location   * 100) : 0;
+
+      const reasoning = generateReasoning(candidate, jd);
+      const expText   = candidate.experience !== null ? `${candidate.experience} years` : '—';
+      const checked   = tier.filterKey === 'strong' ? 'checked' : '';
+
+      return `
+        <div class="resume-card"
+             data-tier="${tier.filterKey}"
+             data-rank="${rank}"
+             style="animation-delay:${(rank - 1) * 80}ms">
+
+          <!-- Clickable summary row -->
+          <div class="card-header" onclick="toggleCard('${expandId}')">
+            <input type="checkbox"
+                   class="card-checkbox"
+                   data-rank="${rank}"
+                   onclick="event.stopPropagation()"
+                   ${checked} />
+            <div class="card-rank" aria-hidden="true">${rank}</div>
+            <div class="card-info">
+              <div class="candidate-name">${escHtml(candidate.name)}</div>
+              <div class="candidate-meta">${metaLine}</div>
+            </div>
+            <div class="card-score-block">
+              <div class="score-number tabnum ${tier.scoreClass}">${candidate.score}</div>
+              <span class="tier-pill ${tier.pillClass}">${tier.label}</span>
+            </div>
+            <button class="btn-send-mail" type="button"
+                    onclick="event.stopPropagation(); sendMail(${rank})">&#9993; Send</button>
+            <button class="card-toggle"
+                    id="btn-${expandId}"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="${expandId}">&#9660;</button>
+          </div>
+
+          <!-- Smooth-expanding detail panel -->
+          <div class="card-expand-outer" id="${expandId}">
+            <div class="card-expand-inner">
+              <div class="card-detail-content">
+
+                <div class="detail-grid">
+
+                  <div class="detail-col">
+                    <h5>Matched skills (${(candidate.matchedSkills || []).length})</h5>
+                    <div class="skill-list">
+                      ${matchedChips || '<span style="color:#A8A29E;font-size:13px">None matched</span>'}
+                    </div>
+                  </div>
+
+                  <div class="detail-col">
+                    <h5>Missing skills (${(candidate.missingSkills || []).length})</h5>
+                    <div class="skill-list">
+                      ${missingChips || '<span style="color:#A8A29E;font-size:13px">All skills covered</span>'}
+                    </div>
+                  </div>
+
+                  <div class="detail-col">
+                    <h5>Candidate info</h5>
+                    <div class="meta-list">
+                      <div class="meta-item"><strong>Experience</strong>${escHtml(expText)}</div>
+                      <div class="meta-item"><strong>Company</strong>${escHtml(candidate.company) || '—'}</div>
+                      <div class="meta-item"><strong>Education</strong>${escHtml(candidate.education) || '—'}</div>
+                      <div class="meta-item"><strong>Email</strong>${escHtml(candidate.email) || '—'}</div>
+                      <div class="meta-item"><strong>Phone</strong>${escHtml(candidate.phone) || '—'}</div>
+                    </div>
+                  </div>
+
+                  <div class="detail-col">
+                    <h5>Score breakdown</h5>
+                    <div class="breakdown-rows">
+                      <div class="breakdown-item">
+                        <span class="breakdown-label">Skills</span>
+                        <div class="breakdown-bar-wrap">
+                          <div class="breakdown-bar" style="width:${skillPct}%"></div>
+                        </div>
+                        <span class="breakdown-val">${candidate.skillScore}/${WEIGHTS.skills}</span>
+                      </div>
+                      <div class="breakdown-item">
+                        <span class="breakdown-label">Experience</span>
+                        <div class="breakdown-bar-wrap">
+                          <div class="breakdown-bar" style="width:${expPct}%"></div>
+                        </div>
+                        <span class="breakdown-val">${candidate.expScore}/${WEIGHTS.experience}</span>
+                      </div>
+                      <div class="breakdown-item">
+                        <span class="breakdown-label">Location</span>
+                        <div class="breakdown-bar-wrap">
+                          <div class="breakdown-bar" style="width:${locPct}%"></div>
+                        </div>
+                        <span class="breakdown-val">${candidate.locationScore}/${WEIGHTS.location}</span>
+                      </div>
+                      <div class="breakdown-total">
+                        <span>Total</span>
+                        <span>${candidate.score} / 100</span>
+                      </div>
+                    </div>
+                  </div>
+
+                </div><!-- /.detail-grid -->
+
+                <div class="reasoning-block">
+                  <h5>Reasoning</h5>
+                  <p class="reasoning-text">${escHtml(reasoning)}</p>
+                </div>
+
+              </div><!-- /.card-detail-content -->
+            </div><!-- /.card-expand-inner -->
+          </div><!-- /.card-expand-outer -->
+
+        </div><!-- /.resume-card -->
+      `;
+    }
+
+
+    /* =============================================================
+       SECTION 11: CSV EXPORT
+       Exports all checkbox-selected candidates to a downloadable file.
+    ============================================================= */
+    function exportCSV() {
+      const allResults = window._lastScoredResults || [];
+      const checked    = document.querySelectorAll('.card-checkbox:checked');
+
+      if (!checked.length) {
+        alert('No candidates selected. Tick at least one resume card to export.');
+        return;
+      }
+
+      const selectedRanks = new Set([...checked].map(cb => Number(cb.dataset.rank)));
+      const toExport = allResults.filter(c => selectedRanks.has(c._rank));
+
+      if (!toExport.length) {
+        alert('Could not match selected candidates. Please re-run scoring and try again.');
+        return;
+      }
+
+      const headers = [
+        'Rank', 'Name', 'Score', 'Tier',
+        'Email', 'Phone', 'Experience (yrs)',
+        'Current Company', 'Education', 'Location',
+        'Matched Skills', 'Missing Skills',
+      ];
+
+      const rows = toExport.map(c => [
+        c._rank,
+        c.name,
+        c.score,
+        getTier(c.score).label,
+        c.email,
+        c.phone,
+        c.experience !== null ? c.experience : '',
+        c.company,
+        c.education,
+        c.location,
+        (c.matchedSkills || []).join(' | '),
+        (c.missingSkills || []).join(' | '),
+      ]);
+
+      const csvText = [headers, ...rows]
+        .map(row => row.map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(','))
+        .join('\r\n');
+
+      const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = 'hiresphere-shortlist.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+
+    /* =============================================================
+       SECTION 12: TOGGLE EXPAND / COLLAPSE
+       Uses grid-template-rows transition for smooth 200ms animation.
+    ============================================================= */
+    function toggleCard(expandId) {
+      const outer  = document.getElementById(expandId);
+      const btn    = document.getElementById('btn-' + expandId);
+      const isOpen = outer.classList.toggle('open');
+      btn.innerHTML = isOpen ? '&#9650;' : '&#9660;';
+      btn.setAttribute('aria-expanded', String(isOpen));
+    }
+
+
+    /* =============================================================
+       SECTION 13: FILTER CARDS
+       Filters the visible cards by tier without re-running scoring.
+    ============================================================= */
+    function filterCards(filterKey) {
+      document.querySelectorAll('.filter-tab').forEach(tab =>
+        tab.classList.toggle('active', tab.dataset.filter === filterKey)
+      );
+      document.querySelectorAll('.resume-card').forEach(card => {
+        card.style.display =
+          (filterKey === 'all' || card.dataset.tier === filterKey) ? '' : 'none';
+      });
+    }
+
+
+    /* =============================================================
+       SECTION 14: MAIN ENTRY — scoreResumes
+    ============================================================= */
+    function scoreResumes() {
+      const jdText      = document.getElementById('jd-input').value.trim();
+      const resumesText = document.getElementById('resumes-input').value.trim();
+      const resultsList = document.getElementById('results-list');
+      const placeholder = document.getElementById('results-placeholder');
+      const exportBtn   = document.getElementById('export-btn');
+      const countSpan   = document.getElementById('results-count');
+      const filterRow   = document.getElementById('filter-row');
+
+      resultsList.innerHTML = '';
+
+      if (!jdText) {
+        resultsList.innerHTML = `<div class="alert">Please paste a job description on the left before scoring.</div>`;
+        placeholder.style.display = 'none';
+        exportBtn.style.display   = 'none';
+        filterRow.style.display   = 'none';
+        countSpan.style.display   = 'none';
+        return;
+      }
+
+      if (!resumesText) {
+        resultsList.innerHTML = `<div class="alert">Please paste at least one resume on the right. Separate multiple resumes with ---</div>`;
+        placeholder.style.display = 'none';
+        exportBtn.style.display   = 'none';
+        filterRow.style.display   = 'none';
+        countSpan.style.display   = 'none';
+        return;
+      }
+
+      const rawBlocks = resumesText
+        .split(/\n[ \t]*---[ \t]*\n/)
+        .map(b => b.trim())
+        .filter(Boolean);
+
+      if (!rawBlocks.length) {
+        resultsList.innerHTML = `<div class="alert">No resume content found. Separate resumes with three dashes (---) on their own line.</div>`;
+        placeholder.style.display = 'none';
+        exportBtn.style.display   = 'none';
+        filterRow.style.display   = 'none';
+        countSpan.style.display   = 'none';
+        return;
+      }
+
+      const jd = parseJD(jdText);
+      window._lastParsedJD = jd;        // used by generateReasoning inside renderCard
+
+      const scored = rawBlocks
+        .map(block => scoreResume(parseResume(block), jd))
+        .sort((a, b) => b.score - a.score)
+        .map(c => ({ ...c, tier: getTier(c.score).label }))
+        .map((c, i) => ({ ...c, _rank: i + 1 }));
+
+      window._lastScoredResults = scored;
+
+      // Reset filter to "All"
+      document.querySelectorAll('.filter-tab').forEach(t =>
+        t.classList.toggle('active', t.dataset.filter === 'all')
+      );
+
+      placeholder.style.display = 'none';
+      exportBtn.style.display   = 'inline-flex';
+      filterRow.style.display   = 'block';
+      countSpan.style.display   = 'inline-block';
+      countSpan.textContent     = `${scored.length} candidate${scored.length !== 1 ? 's' : ''}`;
+      window._hiresphere_candidates = scored;   // sendMail() looks up candidates by rank
+      resultsList.innerHTML         = scored.map((c, i) => renderCard(c, i + 1)).join('');
+    }
+
+
+    /* =============================================================
+       SECTION 15: PDF FILE HANDLER
+       Uses PDF.js (loaded via CDN) to extract text from uploaded
+       PDFs entirely in the browser — no backend, no API.
+
+       Flow:
+         JD panel      — one PDF  → extract → populate #jd-input
+         Resume panel  — N PDFs   → extract each → join with ---
+                         → populate #resumes-input
+                         → re-runs on every add or remove
+
+       Error handling:
+         Scanned / image-only PDFs produce empty text. Each such
+         file is reported individually; valid files still load.
+    ============================================================= */
+
+    /* In-memory list of resume File objects (mirrors the chip UI) */
+    const resumeFileStore = [];
+
+    /* ---- Core: extract all text pages from one PDF File ---- */
+    async function extractPDFText(file) {
+      const buffer  = await file.arrayBuffer();
+      const pdf     = await pdfjsLib.getDocument({ data: buffer }).promise;
+      const pages   = [];
+      for (let p = 1; p <= pdf.numPages; p++) {
+        const page    = await pdf.getPage(p);
+        const content = await page.getTextContent();
+        // join items; separate lines with a newline so parsers see line breaks
+        pages.push(content.items.map(item => item.str).join(' '));
+      }
+      return pages.join('\n').trim();
+    }
+
+    /* ---- JD: single PDF → populate textarea ---- */
+    async function processJDFile(file) {
+      setPDFStatus('jd-pdf-status', 'loading', `Extracting text from ${file.name}…`);
+      try {
+        if (typeof pdfjsLib === 'undefined') throw new Error('PDF.js not loaded. Check your internet connection.');
+        const text = await extractPDFText(file);
+        if (!text) throw new Error(`"${file.name}" has no extractable text layer. This may be a scanned PDF.`);
+        document.getElementById('jd-input').value = text;
+        setPDFStatus('jd-pdf-status', 'success', `✓ Loaded: ${file.name}`);
+      } catch (err) {
+        setPDFStatus('jd-pdf-status', 'error',
+          `Could not extract text from “${file.name}”. This may be a scanned PDF. Please try a text-based PDF.`);
+      }
+    }
+
+    /* ---- Resumes: re-extract ALL stored files on every change ---- */
+    async function processResumeFiles() {
+      const statusEl = document.getElementById('resume-pdf-status');
+      const errEl    = document.getElementById('resume-pdf-errors');
+      errEl.innerHTML = '';
+
+      if (resumeFileStore.length === 0) {
+        document.getElementById('resumes-input').value = '';
+        setPDFStatus('resume-pdf-status', '', '');
+        return;
+      }
+
+      if (typeof pdfjsLib === 'undefined') {
+        setPDFStatus('resume-pdf-status', 'error', 'PDF.js not loaded. Check your internet connection.');
+        return;
+      }
+
+      const n = resumeFileStore.length;
+      setPDFStatus('resume-pdf-status', 'loading',
+        `Extracting text from ${n} PDF${n > 1 ? 's' : ''}…`);
+
+      // Run all extractions in parallel
+      const results = await Promise.allSettled(
+        resumeFileStore.map(f => extractPDFText(f))
+      );
+
+      const texts  = [];
+      const errors = [];
+
+      results.forEach((r, i) => {
+        const name = resumeFileStore[i].name;
+        if (r.status === 'fulfilled' && r.value) {
+          texts.push(r.value);
+        } else {
+          errors.push(
+            `Could not extract text from “${name}”. This may be a scanned PDF. Please try a text-based PDF.`
+          );
+        }
+      });
+
+      // Populate textarea — each resume separated by ---
+      document.getElementById('resumes-input').value =
+        texts.length ? texts.join('\n\n---\n\n') : '';
+
+      // Show per-file errors
+      if (errors.length) {
+        errEl.innerHTML = errors
+          .map(e => `<p class="pdf-err">${escHtml(e)}</p>`)
+          .join('');
+      }
+
+      // Status summary
+      if (texts.length > 0) {
+        const msg = errors.length
+          ? `✓ Loaded ${texts.length} resume${texts.length > 1 ? 's' : ''} · ${errors.length} file${errors.length > 1 ? 's' : ''} failed`
+          : `✓ Loaded ${texts.length} resume${texts.length > 1 ? 's' : ''}`;
+        setPDFStatus('resume-pdf-status', 'success', msg);
+      } else {
+        setPDFStatus('resume-pdf-status', 'error',
+          'All PDFs failed to parse. Please use text-based (non-scanned) PDFs.');
+      }
+    }
+
+    /* ---- Add files to the store; ignore duplicates; then re-extract ---- */
+    function addResumeFiles(fileList) {
+      let added = 0;
+      for (const f of fileList) {
+        if (f.type !== 'application/pdf') continue;
+        // de-duplicate by name + size
+        if (!resumeFileStore.find(x => x.name === f.name && x.size === f.size)) {
+          resumeFileStore.push(f);
+          added++;
+        }
+      }
+      if (added > 0) {
+        renderResumeFileList();
+        processResumeFiles();
+      }
+    }
+
+    /* ---- Remove one file; re-extract remaining ---- */
+    function removeResumeFile(index) {
+      resumeFileStore.splice(index, 1);
+      renderResumeFileList();
+      processResumeFiles();
+    }
+
+    /* ---- Render the chip list ---- */
+    function renderResumeFileList() {
+      const list = document.getElementById('resume-file-list');
+      list.innerHTML = resumeFileStore.map((f, i) => `
+        <div class="pdf-file-chip">
+          <span class="chip-icon">&#128196;</span>
+          <span class="chip-name" title="${escHtml(f.name)}">${escHtml(f.name)}</span>
+          <button class="chip-remove" type="button"
+                  onclick="removeResumeFile(${i})"
+                  aria-label="Remove ${escHtml(f.name)}">&#10005;</button>
+        </div>
+      `).join('');
+    }
+
+    /* ---- Status helper: show / hide the status element ---- */
+    function setPDFStatus(elId, type, msg) {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      el.textContent    = msg;
+      el.className      = `pdf-status${type ? ' pdf-status--' + type : ''}`;
+      el.style.display  = msg ? '' : 'none';
+    }
+
+    /* ---- Wire drag-and-drop onto a dropzone element ---- */
+    function wireDragDrop(zoneId, onDrop) {
+      const zone = document.getElementById(zoneId);
+      if (!zone) return;
+      zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('dz-over'); });
+      zone.addEventListener('dragleave', () => zone.classList.remove('dz-over'));
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('dz-over');
+        onDrop(e.dataTransfer.files);
+      });
+    }
+
+
+    /* =============================================================
+       SECTION 17: MAIL HANDLER
+       All mail functions. Uses mailto: URI — opens the system email
+       client pre-populated. True auto-send requires a backend; this
+       tool is intentionally backend-free per CLAUDE.md rules.
+    ============================================================= */
+
+    const DEFAULT_MAIL_SUBJECT =
+      'Exciting Opportunity — {job_role} Position';
+
+    const DEFAULT_MAIL_TEMPLATE =
+`Dear {name},
+
+I hope this message finds you well. I came across your profile and was impressed by your background in {matched_skills}.
+
+We have an exciting opening for a {job_role} role that I believe would be an excellent fit for your {experience} years of experience at {company}.
+
+Your profile scored {score}/100 on our screening and was categorised as a "{tier}" match for this position. We would love to explore this opportunity with you further.
+
+Could you spare 20 minutes for a quick call this week?
+
+Looking forward to connecting.
+
+Warm regards`;
+
+    /* Toggle the mail configuration panel open / closed */
+    function toggleMailSection() {
+      document.getElementById('mail-section').classList.toggle('open');
+    }
+
+    /* Pre-fill subject and body with the sample template */
+    function loadDefaultTemplate() {
+      const subjectEl  = document.getElementById('mail-subject');
+      const templateEl = document.getElementById('mail-template');
+      if (subjectEl.value.trim() === '')  subjectEl.value  = DEFAULT_MAIL_SUBJECT;
+      if (templateEl.value.trim() === '') templateEl.value = DEFAULT_MAIL_TEMPLATE;
+      checkMailConfigured();
+    }
+
+    /* Show / hide the "Configured" badge based on whether fields are filled */
+    function checkMailConfigured() {
+      const hasFrom     = document.getElementById('mail-from').value.trim() !== '';
+      const hasTemplate = document.getElementById('mail-template').value.trim() !== '';
+      document.getElementById('mail-badge').classList.toggle('visible', hasFrom && hasTemplate);
+    }
+
+    /* Extract the job role from the JD textarea (first non-empty line, or fallback) */
+    function extractJobRoleFromJD() {
+      const jdText = document.getElementById('jd-input').value.trim();
+      if (!jdText) return 'the advertised position';
+      // Prefer lines that contain common role keywords
+      const rolePattern = /\b(engineer|developer|architect|analyst|manager|lead|consultant|designer|devops|sre|data|backend|frontend|fullstack|full-stack)\b/i;
+      const lines = jdText.split('\n').map(l => l.trim()).filter(Boolean);
+      const roleLine = lines.find(l => rolePattern.test(l) && l.length < 80);
+      return roleLine || lines[0].slice(0, 60);
+    }
+
+    /* Build the personalised email and open the system mail client */
+    function sendMail(rank) {
+      const fromEmail = document.getElementById('mail-from').value.trim();
+      const subject   = document.getElementById('mail-subject').value.trim() || DEFAULT_MAIL_SUBJECT;
+      const template  = document.getElementById('mail-template').value.trim() || DEFAULT_MAIL_TEMPLATE;
+
+      // Find the candidate object by rank
+      const card = document.querySelector(`.resume-card[data-rank="${rank}"]`);
+      if (!card) { alert('Candidate card not found. Please score resumes first.'); return; }
+
+      const candidate = window._hiresphere_candidates
+        ? window._hiresphere_candidates[rank - 1]
+        : null;
+
+      if (!candidate) {
+        alert('Candidate data not found. Please score resumes first.');
+        return;
+      }
+
+      if (!candidate.email) {
+        alert(`No email address found in ${candidate.name}'s resume. Cannot open mail client.`);
+        return;
+      }
+
+      // Check that the mail section has been configured
+      if (!fromEmail || !template) {
+        alert('Please open the Email Configuration section and fill in your email address and template first.');
+        // Expand mail section if collapsed
+        if (!document.getElementById('mail-section').classList.contains('open')) {
+          toggleMailSection();
+        }
+        return;
+      }
+
+      const jobRole       = extractJobRoleFromJD();
+      const matchedSkills = (candidate.matchedSkills || []).join(', ') || 'relevant technologies';
+      const missingSkills = (candidate.missingSkills || []).join(', ') || 'none identified';
+      const experience    = candidate.experience !== null ? `${candidate.experience}` : 'several';
+
+      /* Replace all template variables */
+      function fillVars(str) {
+        return str
+          .replace(/\{name\}/g,           candidate.name       || 'Candidate')
+          .replace(/\{email\}/g,          candidate.email      || '')
+          .replace(/\{job_role\}/g,       jobRole)
+          .replace(/\{score\}/g,          String(candidate.score))
+          .replace(/\{tier\}/g,           candidate.tier       || '')
+          .replace(/\{experience\}/g,     experience)
+          .replace(/\{company\}/g,        candidate.company    || 'your current organisation')
+          .replace(/\{location\}/g,       candidate.location   || 'your location')
+          .replace(/\{education\}/g,      candidate.education  || 'your institution')
+          .replace(/\{matched_skills\}/g, matchedSkills)
+          .replace(/\{missing_skills\}/g, missingSkills);
+      }
+
+      const finalSubject = fillVars(subject);
+      let   finalBody    = fillVars(template);
+
+      // mailto: URIs have browser length limits (~2000 chars); truncate body if needed
+      const MAX_BODY = 1800;
+      if (finalBody.length > MAX_BODY) {
+        finalBody = finalBody.slice(0, MAX_BODY) + '\n\n[...email truncated due to length limit]';
+      }
+
+      const mailto = `mailto:${encodeURIComponent(candidate.email)}`
+        + `?subject=${encodeURIComponent(finalSubject)}`
+        + `&body=${encodeURIComponent(finalBody)}`;
+
+      window.location.href = mailto;
+    }
+
+
+    /* =============================================================
+       SECTION 16: EVENT LISTENERS
+    ============================================================= */
+
+    // Score button — dot pulse for 1 second, then run scoring
+    document.getElementById('score-btn').addEventListener('click', function () {
+      const btn      = this;
+      const original = btn.innerHTML;
+      btn.disabled   = true;
+      btn.innerHTML  = '<span class="dot-pulse"><i></i><i></i><i></i></span>&nbsp; Scoring candidates...';
+      setTimeout(() => {
+        scoreResumes();
+        btn.disabled  = false;
+        btn.innerHTML = original;
+      }, 1000);
+    });
+
+    // Export button
+    document.getElementById('export-btn').addEventListener('click', exportCSV);
+
+    // Filter tabs
+    document.querySelectorAll('.filter-tab').forEach(tab =>
+      tab.addEventListener('click', () => filterCards(tab.dataset.filter))
+    );
+
+    // ⌘/Ctrl + Enter shortcut
+    document.addEventListener('keydown', function (e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        const btn = document.getElementById('score-btn');
+        if (!btn.disabled) btn.click();
+      }
+    });
+
+    // Drag-and-drop for JD dropzone (single file)
+    wireDragDrop('jd-dropzone', function (files) {
+      const pdf = [...files].find(f => f.type === 'application/pdf');
+      if (pdf) processJDFile(pdf);
+    });
+
+    // Drag-and-drop for resume dropzone (multiple files)
+    wireDragDrop('resume-dropzone', addResumeFiles);
+
+  </script>
+
+</body>
+</html>
