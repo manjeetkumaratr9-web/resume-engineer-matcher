@@ -1,15 +1,9 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HireSphere · Resume Screener</title>
- <!-- Open Graph Tags for LinkedIn -->
-  <meta property="og:title" content="Resume Engineer Matcher 🔍" />
-  <meta property="og:description" content="AI-powered tool to screen, rank & email candidates instantly!" />
-  <meta property="og:image" content="https://manjeetkumaratr9-web.github.io/resume-engineer-matcher/preview.png" />
-  <meta property="og:url" content="https://manjeetkumaratr9-web.github.io/resume-engineer-matcher/" />
-  <meta property="og:type" content="website" />
 
   <!-- Instrument Serif (editorial headings) + Inter (UI) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -30,18 +24,18 @@
        DESIGN TOKENS — HireSphere brand
     ========================================================= */
     :root {
-      --indigo:    #1E1B4B;   /* primary brand */
-      --amber:     #F59E0B;   /* accent / CTA highlights */
-      --bg:        #FAFAF9;   /* warm off-white page background */
+      --indigo:    #1B3A5C;   /* dark navy — headings, wordmark */
+      --amber:     #5BA4E6;   /* sky blue accent — eyebrow, filter underline, dropzone */
+      --bg:        #F0F7FF;   /* soft blue-tint page background */
       --surface:   #FFFFFF;
-      --border:    #E7E5E4;
-      --text:      #292524;   /* warm dark body */
-      --muted:     #78716C;   /* secondary text */
-      --green:     #16A34A;
+      --border:    #E5E7EB;   /* very light gray dividers */
+      --text:      #4A5568;   /* dark gray body */
+      --muted:     #718096;   /* medium gray labels & hints */
+      --green:     #059669;
       --warn:      #D97706;
       --danger:    #DC2626;
       --t:         200ms ease-out;
-      --shadow:    0 4px 12px rgba(0, 0, 0, 0.04);
+      --shadow:    0 4px 16px rgba(59, 130, 246, 0.12);  /* blue-tinted shadow */
     }
 
     /* =========================================================
@@ -107,9 +101,9 @@
     .version-pill {
       font-size: 12px;
       font-weight: 500;
-      color: var(--muted);
-      background: #F5F4F2;
-      border: 1px solid var(--border);
+      color: #5BA4E6;
+      background: #EBF4FF;
+      border: 1px solid #BFDBFE;
       padding: 5px 14px;
       border-radius: 999px;
     }
@@ -118,6 +112,13 @@
        PAGE INTRO — eyebrow, display heading, sub, stats
     ========================================================= */
     .page-intro {
+      max-width: 100%;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #87CEEB 0%, #60B5E8 100%);
+    }
+
+    .page-intro-inner {
       max-width: 1200px;
       margin: 0 auto;
       padding: 64px 32px 48px;
@@ -126,10 +127,13 @@
     .eyebrow {
       display: inline-block;
       font-size: 10.5px;
-      font-weight: 600;
+      font-weight: 700;
       letter-spacing: 0.13em;
       text-transform: uppercase;
-      color: var(--amber);
+      color: #FFFFFF;
+      background: rgba(255,255,255,0.22);
+      border-radius: 999px;
+      padding: 3px 12px;
       margin-bottom: 18px;
     }
 
@@ -137,15 +141,16 @@
       font-family: 'Instrument Serif', Georgia, serif;
       font-style: italic;
       font-size: 52px;
-      color: var(--indigo);
+      color: #FFFFFF;
       letter-spacing: -0.025em;
       line-height: 1.08;
       margin-bottom: 20px;
+      text-shadow: 0 2px 8px rgba(27,58,92,0.18);
     }
 
     .intro-sub {
       font-size: 16.5px;
-      color: var(--muted);
+      color: rgba(255,255,255,0.92);
       line-height: 1.65;
       max-width: 500px;
       margin-bottom: 28px;
@@ -161,14 +166,14 @@
     .stat-pill {
       font-size: 12px;
       font-weight: 500;
-      color: var(--muted);
-      background: #F5F4F2;
-      border: 1px solid var(--border);
+      color: #1B3A5C;
+      background: rgba(255,255,255,0.8);
+      border: 1px solid rgba(255,255,255,0.5);
       padding: 4px 12px;
       border-radius: 999px;
     }
 
-    .stat-sep { color: var(--border); font-size: 16px; line-height: 1; }
+    .stat-sep { color: rgba(255,255,255,0.6); font-size: 16px; line-height: 1; }
 
     /* =========================================================
        MAIN CONTENT WRAPPER
@@ -218,8 +223,8 @@
     }
 
     .dropzone:hover {
-      border-color: var(--amber);
-      background: rgba(245, 158, 11, 0.03);
+      border-color: #5BA4E6;
+      background: rgba(91, 164, 230, 0.04);
     }
 
     .dropzone input[type="file"] { display: none; }
@@ -240,21 +245,21 @@
       padding: 24px;
       font-size: 13.5px;
       font-family: 'Inter', monospace;
-      border: 1px solid var(--border);
+      border: 1px solid #93C5FD;
       border-radius: 10px;
       resize: vertical;
-      background: #FFFDF9;            /* warm cream paper tint */
+      background: #FFFFFF;
       color: var(--text);
       line-height: 1.72;
-      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.025);
+      box-shadow: inset 0 1px 2px rgba(59, 130, 246, 0.04);
       transition: border-color var(--t), box-shadow var(--t);
     }
 
     .input-panel textarea:focus {
       outline: none;
-      border-color: var(--indigo);
-      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.025),
-                  0 0 0 3px rgba(30, 27, 75, 0.07);
+      border-color: #3B82F6;
+      box-shadow: inset 0 1px 2px rgba(59, 130, 246, 0.04),
+                  0 0 0 3px rgba(59, 130, 246, 0.12);
     }
 
     .input-panel textarea::placeholder { color: #A8A29E; font-size: 13px; }
@@ -274,7 +279,7 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: var(--indigo);
+      background: #5BA4E6;
       color: #fff;
       border: none;
       padding: 12px 24px;
@@ -284,12 +289,13 @@
       border-radius: 10px;
       cursor: pointer;
       letter-spacing: 0.01em;
-      transition: transform var(--t), box-shadow var(--t), opacity var(--t);
+      transition: transform var(--t), box-shadow var(--t), background var(--t), opacity var(--t);
     }
 
     .btn-score:hover:not(:disabled) {
+      background: #3B82F6;
       transform: translateY(-1px);
-      box-shadow: 0 4px 14px rgba(30, 27, 75, 0.22);
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
     }
 
     .btn-score:active:not(:disabled) { transform: translateY(0); }
@@ -363,22 +369,22 @@
       font-size: 12px;
       font-style: normal;
       font-weight: 500;
-      color: var(--muted);
-      background: #F5F4F2;
-      border: 1px solid var(--border);
+      color: #5BA4E6;
+      background: #EBF4FF;
+      border: 1px solid #BFDBFE;
       padding: 3px 10px;
       border-radius: 999px;
       font-variant-numeric: tabular-nums;
     }
 
-    /* Export — indigo outline, top-right of results */
+    /* Export — light gray, top-right of results */
     .btn-export {
       display: none;
       align-items: center;
       gap: 6px;
-      background: var(--surface);
-      color: var(--indigo);
-      border: 1px solid var(--indigo);
+      background: #E2E8F0;
+      color: #4A5568;
+      border: 1px solid #CBD5E1;
       padding: 8px 16px;
       font-family: 'Inter', sans-serif;
       font-size: 13px;
@@ -389,7 +395,7 @@
     }
 
     .btn-export:hover {
-      background: rgba(30, 27, 75, 0.04);
+      background: #CBD5E1;
       transform: translateY(-1px);
     }
 
@@ -473,8 +479,8 @@
 
     .resume-card:hover {
       transform: translateY(-2px);
-      border-color: #D1CFC9;
-      box-shadow: var(--shadow);
+      border-color: #93C5FD;
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.15);
     }
 
     @keyframes fadeInUp {
@@ -493,7 +499,7 @@
       transition: background var(--t);
     }
 
-    .card-header:hover { background: #FAFAF9; }
+    .card-header:hover { background: #EBF4FF; }
 
     .card-checkbox {
       width: 15px;
@@ -566,9 +572,9 @@
       border-radius: 999px;
     }
 
-    .tier-strong { background: #DCFCE7; color: #15803D; }
-    .tier-maybe  { background: #FEF3C7; color: #92400E; }
-    .tier-skip   { background: #FEE2E2; color: #991B1B; }
+    .tier-strong { background: #D1FAE5; color: #059669; border: 1px solid #6EE7B7; }
+    .tier-maybe  { background: #FEF3C7; color: #D97706; border: 1px solid #FCD34D; }
+    .tier-skip   { background: #FEE2E2; color: #DC2626; border: 1px solid #FCA5A5; }
 
     /* Chevron toggle button */
     .card-toggle {
@@ -587,7 +593,7 @@
       transition: background var(--t), border-color var(--t);
     }
 
-    .card-toggle:hover { background: var(--bg); border-color: #C6C3C0; }
+    .card-toggle:hover { background: #EBF4FF; border-color: #93C5FD; }
 
     /* =========================================================
        CARD DETAIL — smooth expand via grid-template-rows
@@ -638,8 +644,8 @@
     }
 
     .skill-matched {
-      background: rgba(22, 163, 74, 0.08);
-      color: #15803D;
+      background: #D1FAE5;
+      color: #059669;
     }
 
     .skill-matched::before {
@@ -648,19 +654,19 @@
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: var(--green);
+      background: #059669;
       flex-shrink: 0;
     }
 
     .skill-missing {
-      background: rgba(245, 158, 11, 0.08);
-      color: #92400E;
+      background: #FEE2E2;
+      color: #DC2626;
     }
 
     .skill-missing::before {
       content: '—';
       font-size: 10px;
-      color: var(--warn);
+      color: #DC2626;
     }
 
     /* Candidate info */
@@ -705,7 +711,7 @@
     .breakdown-bar {
       height: 100%;
       border-radius: 2px;
-      background: var(--indigo);
+      background: linear-gradient(90deg, #5BA4E6, #3B82F6);
     }
 
     .breakdown-val {
@@ -777,8 +783,8 @@
 
     /* Dropzone active drag state */
     .dropzone.dz-over {
-      border-color: var(--amber);
-      background: rgba(245, 158, 11, 0.05);
+      border-color: #3B82F6;
+      background: rgba(59, 130, 246, 0.06);
     }
 
     /* File chip row */
@@ -793,8 +799,8 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: #F5F4F2;
-      border: 1px solid var(--border);
+      background: #EBF4FF;
+      border: 1px solid #BFDBFE;
       border-radius: 6px;
       padding: 4px 8px 4px 10px;
       font-size: 12.5px;
@@ -962,8 +968,8 @@
     }
 
     .mail-input:focus {
-      border-color: var(--indigo);
-      box-shadow: 0 0 0 3px rgba(30,27,75,0.08);
+      border-color: #3B82F6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
     }
 
     .mail-textarea {
@@ -982,8 +988,8 @@
     }
 
     .mail-textarea:focus {
-      border-color: var(--indigo);
-      box-shadow: 0 0 0 3px rgba(30,27,75,0.08);
+      border-color: #3B82F6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
     }
 
     .mail-vars-guide {
@@ -995,8 +1001,8 @@
     .mail-vars-guide code {
       font-family: 'Courier New', monospace;
       font-size: 11.5px;
-      background: #F5F4F2;
-      border: 1px solid #E7E5E4;
+      background: #EBF4FF;
+      border: 1px solid #BFDBFE;
       border-radius: 4px;
       padding: 1px 5px;
       color: var(--indigo);
@@ -1029,22 +1035,22 @@
       align-items: center;
       gap: 5px;
       padding: 5px 12px;
-      border: 1px solid var(--border);
+      border: 1px solid #6EE7B7;
       border-radius: 7px;
       font-size: 12.5px;
       font-weight: 500;
       font-family: inherit;
-      background: var(--surface);
-      color: var(--indigo);
+      background: #D1FAE5;
+      color: #059669;
       cursor: pointer;
       white-space: nowrap;
       transition: background var(--t), border-color var(--t), color var(--t);
     }
 
     .btn-send-mail:hover {
-      background: var(--indigo);
+      background: #34D399;
       color: #fff;
-      border-color: var(--indigo);
+      border-color: #34D399;
     }
 
     /* =========================================================
@@ -1093,18 +1099,20 @@
        PAGE INTRO
   ========================================================= -->
   <div class="page-intro">
-    <span class="eyebrow">Resume Intelligence</span>
-    <h1 class="display-heading">Screen smarter. Hire faster.</h1>
-    <p class="intro-sub">
-      Upload job descriptions and resumes. Get ranked candidates
-      with reasoning in seconds.
-    </p>
-    <div class="stat-row">
-      <span class="stat-pill">Avg. screening time: 47s</span>
-      <span class="stat-sep" aria-hidden="true">·</span>
-      <span class="stat-pill">Accuracy: 94%</span>
-      <span class="stat-sep" aria-hidden="true">·</span>
-      <span class="stat-pill">PDFs supported</span>
+    <div class="page-intro-inner">
+      <span class="eyebrow">Resume Intelligence</span>
+      <h1 class="display-heading">Screen smarter. Hire faster.</h1>
+      <p class="intro-sub">
+        Upload job descriptions and resumes. Get ranked candidates
+        with reasoning in seconds.
+      </p>
+      <div class="stat-row">
+        <span class="stat-pill">Avg. screening time: 47s</span>
+        <span class="stat-sep" aria-hidden="true">·</span>
+        <span class="stat-pill">Accuracy: 94%</span>
+        <span class="stat-sep" aria-hidden="true">·</span>
+        <span class="stat-pill">PDFs supported</span>
+      </div>
     </div>
   </div>
 
